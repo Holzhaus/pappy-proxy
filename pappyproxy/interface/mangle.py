@@ -1,5 +1,6 @@
 import curses
 import os
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -173,7 +174,17 @@ def execute_repeater(client, reqid):
     storage, reqid = client.parse_reqid(reqid)
     script_loc = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                               "repeater", "repeater.vim")
-    args = (["vim", "-S", script_loc, "-c", "RepeaterSetup %s %s %s"%(reqid, storage.storage_id, client.maddr)])
+    vim_executables = (shutil.which(name) for name in ('vim', 'nvim'))
+    try:
+        vim_executable = next(filter(None, vim_executables))
+    except StopIteration:
+        print('vim/nvim not found in $PATH')
+        return
+    args = [
+        vim_executable,
+        '-S', script_loc,
+        '-c', 'RepeaterSetup %s %s %s' % (reqid, storage.storage_id, client.maddr),
+    ]
     subprocess.call(args)
 
 class CloudToButt(InterceptMacro):
